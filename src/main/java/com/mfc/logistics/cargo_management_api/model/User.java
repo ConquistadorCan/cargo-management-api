@@ -1,4 +1,4 @@
-package com.mfc.logistics.cargo_management_api.models;
+package com.mfc.logistics.cargo_management_api.model;
 
 import com.mfc.logistics.cargo_management_api.enums.UserRoleEnum;
 import jakarta.persistence.*;
@@ -40,5 +40,4 @@ public class User {
     public void setPassword(String password) { this.password = password; }
 
     public UserRoleEnum getRole() { return role; }
-    public void setRole(UserRoleEnum role) { this.role = role; }
 }

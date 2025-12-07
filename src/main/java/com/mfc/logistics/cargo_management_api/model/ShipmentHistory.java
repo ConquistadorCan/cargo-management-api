@@ -1,4 +1,4 @@
-package com.mfc.logistics.cargo_management_api.models;
+package com.mfc.logistics.cargo_management_api.model;
 
 import com.mfc.logistics.cargo_management_api.enums.ShipmentStatusEnum;
 import jakarta.persistence.*;
@@ -29,11 +29,10 @@ public class ShipmentHistory {
 
     public ShipmentHistory() {}
 
-    public ShipmentHistory(User changedBy, ShipmentStatusEnum prevStatement, ShipmentStatusEnum nextStatement, LocalDateTime changedAt, Shipment shipment) {
+    public ShipmentHistory(User changedBy, ShipmentStatusEnum prevStatement, ShipmentStatusEnum nextStatement, Shipment shipment) {
         this.changedBy = changedBy;
         this.prevStatement = prevStatement;
         this.nextStatement = nextStatement;
-        this.changedAt = changedAt;
         this.shipment = shipment;
     }
 
