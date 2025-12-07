@@ -2,12 +2,11 @@ package com.mfc.logistics.cargo_management_api.service.implementation;
 
 import com.mfc.logistics.cargo_management_api.enums.ShipmentStatusEnum;
 import com.mfc.logistics.cargo_management_api.model.Shipment;
-import com.mfc.logistics.cargo_management_api.model.ShipmentHistory;
 import com.mfc.logistics.cargo_management_api.model.User;
-import com.mfc.logistics.cargo_management_api.repository.ShipmentHistoryRepository;
 import com.mfc.logistics.cargo_management_api.repository.ShipmentRepository;
-import com.mfc.logistics.cargo_management_api.repository.UserRepository;
 import com.mfc.logistics.cargo_management_api.service.ShipmentAssignmentService;
+import com.mfc.logistics.cargo_management_api.service.ShipmentHistoryService;
+import com.mfc.logistics.cargo_management_api.service.UserService;
 import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.transaction.Transactional;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,15 +17,15 @@ import java.util.Random;
 
 @Service
 public class ShipmentAssignmentServiceImpl implements ShipmentAssignmentService {
-    private final UserRepository userRepository;
     private final ShipmentRepository shipmentRepository;
-    private final ShipmentHistoryRepository shipmentHistoryRepository;
+    private final UserService userService;
+    private final ShipmentHistoryService shipmentHistoryService;
     private final Random random = new Random();
 
-    public ShipmentAssignmentServiceImpl(UserRepository userRepository, ShipmentRepository shipmentRepository, ShipmentHistoryRepository shipmentHistoryRepository, Dotenv dotenv) {
-        this.userRepository = userRepository;
+    public ShipmentAssignmentServiceImpl(UserService userService, ShipmentRepository shipmentRepository, ShipmentHistoryService shipmentHistoryService, Dotenv dotenv) {
+        this.userService = userService;
         this.shipmentRepository = shipmentRepository;
-        this.shipmentHistoryRepository = shipmentHistoryRepository;
+        this.shipmentHistoryService = shipmentHistoryService;
     }
 
     @Override
@@ -37,7 +36,7 @@ public class ShipmentAssignmentServiceImpl implements ShipmentAssignmentService 
             throw new RuntimeException("Shipment is not pending. Please check the status of the shipment. Shipment tracking no: " + shipment.getTrackingNumber());
         }
 
-        List<User> staffList = userRepository.findAvailableStaff();
+        List<User> staffList = userService.findAvailableStaff();
 
         if (staffList.isEmpty()) {
             return;
@@ -49,8 +48,7 @@ public class ShipmentAssignmentServiceImpl implements ShipmentAssignmentService 
         shipment.setStatus(ShipmentStatusEnum.IN_TRANSIT);
         shipmentRepository.save(shipment);
 
-        ShipmentHistory shipmentHistory= new ShipmentHistory(null, prevStatus, ShipmentStatusEnum.IN_TRANSIT, shipment);
-        shipmentHistoryRepository.save(shipmentHistory);
+        shipmentHistoryService.createShipmentHistory(shipment, null, prevStatus, ShipmentStatusEnum.IN_TRANSIT);
     }
 
     @Override
