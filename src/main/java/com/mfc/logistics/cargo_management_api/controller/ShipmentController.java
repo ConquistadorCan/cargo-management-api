@@ -18,7 +18,6 @@ public class ShipmentController {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole('STAFF')")
     public ResponseEntity<ShipmentCreateResponseDTO> createShipment(@RequestBody ShipmentCreateRequestDTO request) {
         ShipmentCreateResponseDTO response = shipmentService.createShipment(request);
 

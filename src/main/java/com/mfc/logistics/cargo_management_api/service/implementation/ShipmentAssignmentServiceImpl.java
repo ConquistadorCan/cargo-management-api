@@ -9,6 +9,8 @@ import com.mfc.logistics.cargo_management_api.service.ShipmentHistoryService;
 import com.mfc.logistics.cargo_management_api.service.UserService;
 import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +22,14 @@ public class ShipmentAssignmentServiceImpl implements ShipmentAssignmentService 
     private final ShipmentRepository shipmentRepository;
     private final UserService userService;
     private final ShipmentHistoryService shipmentHistoryService;
+    private final CacheManager cacheManager;
     private final Random random = new Random();
 
-    public ShipmentAssignmentServiceImpl(UserService userService, ShipmentRepository shipmentRepository, ShipmentHistoryService shipmentHistoryService, Dotenv dotenv) {
+    public ShipmentAssignmentServiceImpl(UserService userService, ShipmentRepository shipmentRepository, ShipmentHistoryService shipmentHistoryService, Dotenv dotenv, CacheManager cacheManager) {
         this.userService = userService;
         this.shipmentRepository = shipmentRepository;
         this.shipmentHistoryService = shipmentHistoryService;
+        this.cacheManager = cacheManager;
     }
 
     @Override
@@ -49,6 +53,8 @@ public class ShipmentAssignmentServiceImpl implements ShipmentAssignmentService 
         shipmentRepository.save(shipment);
 
         shipmentHistoryService.createShipmentHistory(shipment, null, prevStatus, ShipmentStatusEnum.IN_TRANSIT);
+
+        cacheShipmentStatus(shipment);
     }
 
     @Override
@@ -60,5 +66,10 @@ public class ShipmentAssignmentServiceImpl implements ShipmentAssignmentService 
         for (Shipment shipment : unassignedShipments) {
             assignCourierToShipment(shipment);
         }
+    }
+
+    private void cacheShipmentStatus(Shipment shipment) {
+        Cache cache = cacheManager.getCache("shipmentStatus");
+        cache.put(shipment.getTrackingNumber(), shipment.getStatus().name());
     }
 }
