@@ -68,4 +68,38 @@ public class ShipmentServiceImpl implements ShipmentService {
 
         shipmentHistoryService.createShipmentHistory(shipment, staff, prevStatus, ShipmentStatusEnum.DELIVERED);
     }
+
+    @Override
+    public ShipmentStatusEnum getShipmentStatus(String trackingNumber) {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userService.findByUsername(userDetails.getUsername());
+
+        Shipment shipment = shipmentRepository.findByTrackingNumber(trackingNumber).orElseThrow();
+
+        if (!shipment.getCreatedBy().getId().equals(user.getId())) {
+            throw new RuntimeException("Shipment is not belong to the user.");
+        }
+
+        return shipment.getStatus();
+    }
+
+    @Override
+    @Transactional
+    public void cancelShipment(String trackingNumber) {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userService.findByUsername(userDetails.getUsername());
+
+        Shipment shipment = shipmentRepository.findByTrackingNumber(trackingNumber).orElseThrow();
+
+        if (!shipment.getCreatedBy().getId().equals(user.getId())) {
+            throw new RuntimeException("Shipment is not belong to the user.");
+        }
+
+        ShipmentStatusEnum prevStatus = shipment.getStatus();
+
+        shipment.setStatus(ShipmentStatusEnum.CANCELLED);
+        shipmentRepository.save(shipment);
+
+        shipmentHistoryService.createShipmentHistory(shipment, user, prevStatus, ShipmentStatusEnum.CANCELLED);
+    }
 }
